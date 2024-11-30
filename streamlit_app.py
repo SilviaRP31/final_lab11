@@ -25,7 +25,7 @@ model, data = load_model_and_data()
 
 # Navigation Menu
 st.title("🏥 Healthcare Analysis and Explainability")
-menu = ["Data Exploration", "Predictive Model", "Global Explainability", "Local Explainability"]
+menu = ["Data Exploration", "Predictive Model", "Explainability"]
 choice = st.radio("Navigate to:", menu, horizontal=True)
 
 # Define common utility functions
@@ -127,7 +127,7 @@ elif choice == "Predictive Model":
     st.write(f"Predicted Class: **{prediction}**")
     st.write(f"Probability of Class 1 (OF_PERSIS_ANYTIME): **{prediction_proba[1]:.2f}**")
 
-elif choice == "Global Explainability":
+elif choice == "Explainability":
     st.header("🌍 Global Explainability")
     st.write("""
         ### How the Predictive Model Works
@@ -163,24 +163,13 @@ elif choice == "Global Explainability":
         in the predictive model, showing in this cases more proximity to suffer from healthcare problems.
     """)
 
+    st.header("🔍 Local Explainability")
     st.write("""
-        ### SHAP Bar Plot
-        A SHAP bar plot gives a clear view of the most influential features in the model. This plot ranks features based on their 
-        **mean absolute SHAP value**, providing a global understanding of the model's predictions.
+        ### SHAP Waterfall Plots
+        Select a class (or both) to see detailed explanations for an individual prediction.
+        - **Class 0**: Patients predicted with **No Persistence**.
+        - **Class 1**: Patients predicted with **Persistence**.
     """)
-
-    # SHAP Bar Plot
-    shap.plots.bar(shap_values[:, :, 1], max_display=15)
-    st.pyplot(plt)
-
-    st.write("""
-        ### Conclusion
-        By using SHAP values, we can easily understand and explain how features influence the model’s predictions, and therefore the patient's health.
-    """)
-
-elif choice == "Local Explainability":
-    st.header("🧑‍⚕️ Local Explainability")
-    st.write("### SHAP Waterfall and Decision Plots")
 
     # SHAP values and probabilities
     explainer = shap.Explainer(model)
@@ -201,3 +190,20 @@ elif choice == "Local Explainability":
     shap_values_class_1 = shap_values[patient_class_1_idx]
     shap.plots.waterfall(shap_values_class_1[:, 1])
     st.pyplot(plt)
+
+    #Solution for a patient with prediction of being class 0
+    num_variables_stage2 = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
+    num_variables_stage2 = [var for var in num_variables_stage2 if var not in ["ID_PATIENT", "OF_PERSIS_ANYTIME"]]
+    y_pred_proba = model.predict_proba(X_test[num_variables_stage2])
+
+    patient_class_0_idx = np.where(y_pred_proba[:, 0] > 0.5)[0][0]
+    shap_values_class_0 = shap_values[patient_class_0_idx]
+
+    shap.plots.waterfall(shap_values_class_0[ :, 0])
+    st.pyplot(plt)
+
+    st.write("""
+        ### Conclusion
+        By using SHAP values, we can easily understand and explain how features influence the model’s predictions, and therefore the patient's health.
+    """)
+
