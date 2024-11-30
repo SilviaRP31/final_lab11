@@ -26,7 +26,7 @@ model, data = load_model_and_data()
 
 # Navigation Menu
 st.title("🏥 Healthcare Analysis and Explainability")
-menu = ["Data Exploration", "Predictive Model", "Explainability"]
+menu = ["Data Exploration", "Predictive Model", "Global Explainability", "Local Explainability"]
 choice = st.radio("Navigate to:", menu, horizontal=True)
 
 # Define common utility functions
@@ -128,7 +128,7 @@ elif choice == "Predictive Model":
     st.write(f"Predicted Class: **{prediction}**")
     st.write(f"Probability of Class 1 (OF_PERSIS_ANYTIME): **{prediction_proba[1]:.2f}**")
 
-elif choice == "Explainability":
+elif choice == "Global Explainability":
     st.header("🌍 Global Explainability")
     st.write("""
         ### How the Predictive Model Works
@@ -164,36 +164,37 @@ elif choice == "Explainability":
         in the predictive model, showing in this cases more proximity to suffer from healthcare problems.
     """)
 
-    st.header("🔍 Local Explainability")
+    st.write("""
+        ### Conclusion
+        By using SHAP values, we can easily understand and explain how features influence the model’s predictions, and therefore the patient's health.
+    """)
+
+elif choice == "Local Explainability":
+    st.title("🔍Local Explainability")
     st.write("""
         ### SHAP Waterfall Plots
         Select a class (or both) to see detailed explanations for an individual prediction.
         - **Class 0**: Patients predicted with **No Persistence**.
         - **Class 1**: Patients predicted with **Persistence**.
     """)
-
-    # SHAP values and probabilities
+    st.write("### SHAP Waterfall and Decision Plots")
+    
     explainer = shap.Explainer(model)
     X_test = data.drop(columns=["ID_PATIENT", "OF_PERSIS_ANYTIME"])
     shap_values = explainer(X_test)
-    y_pred_proba = model.predict_proba(X_test)
+    
+    y_pred_proba = model.predict_proba(data.drop(columns=["ID_PATIENT", "OF_PERSIS_ANYTIME"]))
 
     # Patient with class 0 prediction
-    st.write("#### Patient with Prediction: Class 0")
     patient_class_0_idx = np.where(y_pred_proba[:, 0] > 0.5)[0][0]
     shap_values_class_0 = shap_values[patient_class_0_idx]
+    st.write("#### Patient with Prediction: Class 0")
     shap.plots.waterfall(shap_values_class_0[:, 0])
     st.pyplot(plt)
 
     # Patient with class 1 prediction
-    st.write("#### Patient with Prediction: Class 1")
     patient_class_1_idx = np.where(y_pred_proba[:, 1] > 0.5)[0][0]
     shap_values_class_1 = shap_values[patient_class_1_idx]
+    st.write("#### Patient with Prediction: Class 1")
     shap.plots.waterfall(shap_values_class_1[:, 1])
     st.pyplot(plt)
-
-    st.write("""
-        ### Conclusion
-        By using SHAP values, we can easily understand and explain how features influence the model’s predictions, and therefore the patient's health.
-    """)
-
