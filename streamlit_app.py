@@ -191,17 +191,6 @@ elif choice == "Explainability":
     shap.plots.waterfall(shap_values_class_1[:, 1])
     st.pyplot(plt)
 
-    #Solution for a patient with prediction of being class 0
-    num_variables_stage2 = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
-    num_variables_stage2 = [var for var in num_variables_stage2 if var not in ["ID_PATIENT", "OF_PERSIS_ANYTIME"]]
-    y_pred_proba = model.predict_proba(X_test[num_variables_stage2])
-
-    patient_class_0_idx = np.where(y_pred_proba[:, 0] > 0.5)[0][0]
-    shap_values_class_0 = shap_values[patient_class_0_idx]
-
-    shap.plots.waterfall(shap_values_class_0[ :, 0])
-    st.pyplot(plt)
-
     st.write("""
         ### Conclusion
         By using SHAP values, we can easily understand and explain how features influence the model’s predictions, and therefore the patient's health.
