@@ -1,0 +1,10 @@
+Name: shap
+Version: 0.46.0
+Summary: A unified approach to explain the output of any machine learning model.
+Home-page: 
+Author: 
+Author-email: Scott Lundberg <slund1@cs.washington.edu>
+License: MIT License
+Location: /workspaces/final_lab11/venv/lib/python3.11/site-packages
+Requires: cloudpickle, numba, numpy, packaging, pandas, scikit-learn, scipy, slicer, tqdm
+Required-by: 
