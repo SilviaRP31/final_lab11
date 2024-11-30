@@ -7,7 +7,7 @@ import shap
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Configure page layout
+# Config page layout
 st.set_page_config(
     page_title="Healthcare Analysis and Explainability",
     page_icon="🏥",
@@ -24,12 +24,11 @@ def load_model_and_data():
 
 model, data = load_model_and_data()
 
-# Navigation Menu
+# Menu
 st.title("🏥 Healthcare Analysis and Explainability")
 menu = ["Data Exploration", "Predictive Model", "Global Explainability", "Local Explainability"]
 choice = st.radio("Navigate to:", menu, horizontal=True)
 
-# Define common utility functions
 def plot_correlation_matrix(correlation_matrix):
     """Plots the correlation matrix."""
     plt.figure(figsize=(12, 10))
@@ -41,7 +40,6 @@ def get_top_correlations(correlation_matrix, target_col, top_n=3):
     target_corr = correlation_matrix[target_col].drop(target_col)
     return target_corr.abs().sort_values(ascending=False).head(top_n)
 
-# Main content
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 if choice == "Data Exploration":
@@ -56,12 +54,12 @@ if choice == "Data Exploration":
     )
     st.write(f"Selected Patient ID Range: **{min_id} to {max_id}**")
     
-    # Filter data by selected range
+    # Filter data by range
     filtered_data = data[(data["ID_PATIENT"] >= min_id) & (data["ID_PATIENT"] <= max_id)]
     st.write("### Filtered Dataset")
     st.dataframe(filtered_data.set_index("ID_PATIENT"))
 
-    # Plotting the confusion matrix for the selected patients
+    # Confusion matrix based in selected patients
     if not filtered_data.empty:
         st.write("### Confusion Matrix for Selected Patients")
         X_filtered = filtered_data.drop(columns=["ID_PATIENT", "OF_PERSIS_ANYTIME"])
@@ -69,10 +67,8 @@ if choice == "Data Exploration":
         
         y_pred = model.predict(X_filtered)
         
-        # Calculate confusion matrix
         cm = confusion_matrix(y_filtered, y_pred, labels=model.classes_)
-        
-        # Display confusion matrix
+   
         fig, ax = plt.subplots(figsize=(6, 6))
         disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
         disp.plot(ax=ax, cmap="Blues", colorbar=True)
@@ -96,19 +92,15 @@ elif choice == "Predictive Model":
     st.header("🧠 Predictive Model")
     st.write("### Input Patient Data")
 
-    # Create columns for user inputs
-    num_columns = 3  # You can adjust this number for more or fewer columns
+    # Columns for inputs
+    num_columns = 4 
     columns = st.columns(num_columns)
-    
-    # Create a dictionary to store the input data
     user_data = {}
     
-    # Exclude the target and ID_PATIENT from the input features
     feature_columns = [col for col in data.columns if col not in ["ID_PATIENT", "OF_PERSIS_ANYTIME"]]
     
-    # Iterate over the columns and input fields
+    # Collect inputs
     for i, col in enumerate(columns):
-        # Distribute the features across the columns
         start_idx = i * len(feature_columns) // num_columns
         end_idx = (i + 1) * len(feature_columns) // num_columns
         feature_subset = feature_columns[start_idx:end_idx]
@@ -116,14 +108,12 @@ elif choice == "Predictive Model":
         for feature in feature_subset:
             user_data[feature] = col.number_input(f"Enter {feature}", value=0.0)
     
-    # Convert the input data into a DataFrame, ensure correct column order
     input_data = pd.DataFrame([user_data])[feature_columns]  # Ensure columns are in the same order as during training
 
-    # Make prediction
+    # Prediction
     prediction = model.predict(input_data)[0]
     prediction_proba = model.predict_proba(input_data)[0]
 
-    # Display the prediction
     st.write("### Prediction Results")
     st.write(f"Predicted Class: **{prediction}**")
     st.write(f"Probability of Class 1 (OF_PERSIS_ANYTIME): **{prediction_proba[1]:.2f}**")
@@ -146,12 +136,10 @@ elif choice == "Global Explainability":
              all instances, helping to identify the most important features.
     """)
 
-    # SHAP Explanation
+    # SHAP explanation and plot
     explainer = shap.Explainer(model)
     X_test = data.drop(columns=["ID_PATIENT", "OF_PERSIS_ANYTIME"])
     shap_values = explainer(X_test)
-
-    # SHAP Summary Plot
     shap.summary_plot(shap_values[:, :, 1], X_test)
     st.pyplot(plt)
 
@@ -185,14 +173,14 @@ elif choice == "Local Explainability":
     
     y_pred_proba = model.predict_proba(data.drop(columns=["ID_PATIENT", "OF_PERSIS_ANYTIME"]))
 
-    # Patient with class 0 prediction
+    # Patient Class 0 
     patient_class_0_idx = np.where(y_pred_proba[:, 0] > 0.5)[0][0]
     shap_values_class_0 = shap_values[patient_class_0_idx]
     st.write("#### Patient with Prediction: Class 0")
     shap.plots.waterfall(shap_values_class_0[:, 0])
     st.pyplot(plt)
 
-    # Patient with class 1 prediction
+    # Patient Class 1 
     patient_class_1_idx = np.where(y_pred_proba[:, 1] > 0.5)[0][0]
     shap_values_class_1 = shap_values[patient_class_1_idx]
     st.write("#### Patient with Prediction: Class 1")
